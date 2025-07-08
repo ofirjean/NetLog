@@ -4,4 +4,4 @@
 .terraform.lock.hcl
 *.pem
 *.key
-*_init.yaml
+

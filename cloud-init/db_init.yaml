@@ -1,0 +1,12 @@
+package_update: true
+package_upgrade: true
+packages:
+  - postgresql
+
+runcmd:
+  - sudo -u postgres psql -c "CREATE DATABASE netlog_db;"
+  - sudo -u postgres psql -c \"CREATE USER netlog_user WITH ENCRYPTED PASSWORD 'ChangeMe123!';\"
+  - sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE netlog_db TO netlog_user;"
+  - sed -i \"s/#listen_addresses = 'localhost'/listen_addresses = '*'/\" /etc/postgresql/*/main/postgresql.conf
+  - echo \"host all all 10.0.0.0/16 md5\" >> /etc/postgresql/*/main/pg_hba.conf
+  - systemctl restart postgresql
