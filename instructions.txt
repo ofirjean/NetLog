@@ -1,0 +1,104 @@
+🔹1. Basic App Functionality
+You need to build a Flask web application that:
+
+Receives JSON input with:
+
+json
+Copy
+Edit
+{
+  "name": "Baruchi",
+  "value": 87,
+  "time": "Wed Jun 28 18:05:52 JDT 2023"
+}
+Stores that input in a PostgreSQL database.
+
+🔹2. App Deployment and Network Architecture
+Flask app runs on an Application server in a public subnet.
+
+PostgreSQL DB runs on a DB server in a private subnet.
+
+Use Postman GET calls to test the app.
+
+🔹3. Infrastructure Requirements
+You must create all infrastructure needed to support the app, including:
+
+Compute (VMs)
+
+Network (VNet, subnets)
+
+Security (NSGs)
+
+Automation (app should start after reboot)
+
+Cost optimization (e.g., use small VM types, shut down when idle)
+
+🔹4. Infrastructure Components
+You need to create:
+
+A Resource Group
+
+A Virtual Network with:
+
+Public subnet (Flask app)
+
+Private subnet (PostgreSQL DB)
+
+Deploy:
+
+Flask app VM in the public subnet
+
+DB VM in the private subnet (must be private!)
+
+Ensure:
+
+Public access to Flask app
+
+Only internal access to DB
+
+Auto-start after reboot
+
+Persistent database data
+
+🔹5. Security and Budget Considerations
+NSGs (Network Security Groups) must:
+
+Allow access to the app VM
+
+Allow app <-> DB internal communication
+
+Block public access to DB
+
+Be mindful of cost:
+
+Use small instances
+
+Shut down when not needed
+
+🔹6. Expected Results
+Flask app is live and accessible via browser
+
+DB is secure and private
+
+Rebooting either VM will not break the setup
+
+Database data is persistent across reboots
+
+🔹7. Delivery Instructions
+Use Postman to call the app:
+
+Once before reboot
+
+Once after reboot
+
+Save responses as:
+
+before_reboot.json
+
+after_reboot.json
+
+Create a folder in your Git repo named:
+postman_response/
+
+Push the two JSON files there.
+
