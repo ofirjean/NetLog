@@ -44,6 +44,18 @@ resource "azurerm_network_security_group" "netlog_db_nsg" {
     source_address_prefix      = azurerm_subnet.public_subnet.address_prefixes[0]
     destination_address_prefix = "*"
   }
+
+  security_rule {
+    name                       = "AllowSSHFromApp"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = azurerm_subnet.public_subnet.address_prefixes[0]
+    destination_address_prefix = "*"
+  }
 }
 
 resource "azurerm_subnet_network_security_group_association" "app_nsg_assoc" {

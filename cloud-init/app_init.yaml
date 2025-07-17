@@ -1,41 +1,34 @@
-#cloud-config
-package_update: true
-package_upgrade: true
-packages:
-  - python3
-  - python3-pip
+from flask import Flask, request, jsonify
+import psycopg2
 
-runcmd:
-  - pip3 install flask
-  - mkdir -p /opt/netlog_app
-  - |
-    cat << EOF > /opt/netlog_app/app.py
-    from flask import Flask
-    app = Flask(__name__)
+app = Flask(__name__)
 
-    @app.route('/')
-    def home():
-        return 'Hello from NetLog Flask App!'
+# Setup your DB connection here (adjust with your DB details)
+conn = psycopg2.connect(
+    host="your-db-host",
+    database="your-db-name",
+    user="your-db-user",
+    password="your-db-password"
+)
+cur = conn.cursor()
 
-    if __name__ == '__main__':
-        app.run(host='0.0.0.0', port=5000)
-    EOF
+@app.route('/')
+def home():
+    return 'Hello from NetLog Flask App!'
 
-  - |
-    cat << EOF > /etc/systemd/system/netlog.service
-    [Unit]
-    Description=NetLog Flask App
-    After=network.target
+@app.route('/log', methods=['POST'])
+def log_data():
+    data = request.get_json()
+    message = data.get('message')
 
-    [Service]
-    ExecStart=/usr/bin/python3 /opt/netlog_app/app.py
-    Restart=always
-    User=azureuser
+    if not message:
+        return jsonify({"error": "Missing message"}), 400
 
-    [Install]
-    WantedBy=multi-user.target
-    EOF
+    # Insert message into your DB table (adjust table name and columns)
+    cur.execute("INSERT INTO logs (message) VALUES (%s)", (message,))
+    conn.commit()
 
-  - systemctl daemon-reload
-  - systemctl enable netlog
-  - systemctl start netlog
+    return jsonify({"status": "success", "message": message}), 201
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

@@ -4,17 +4,17 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
   resource_group_name = data.azurerm_resource_group.existing.name
   size                = "Standard_B1s"
   admin_username      = "azureuser"
-
+  admin_password      = "Admin@1"
   network_interface_ids = [
     azurerm_network_interface.app_nic.id,
   ]
 
-  admin_ssh_key {
-    username   = "azureuser"
-    public_key = file("~/.ssh/netlog_key.pub")
-  }
+  #admin_ssh_key {
+   # username   = "azureuser"
+    #public_key = file("~/.ssh/id_rsa.pub")
+  #}
 
-  disable_password_authentication = true
+  disable_password_authentication = false
 
   custom_data = filebase64("${path.module}/cloud-init/app_init.yaml")
 
@@ -45,17 +45,17 @@ resource "azurerm_linux_virtual_machine" "db_vm" {
   resource_group_name = data.azurerm_resource_group.existing.name
   size                = "Standard_B1s"
   admin_username      = "azureuser"
-
+  admin_password      = "Admin@1"
   network_interface_ids = [
     azurerm_network_interface.db_nic.id,
   ]
 
-  admin_ssh_key {
-    username   = "azureuser"
-    public_key = file("~/.ssh/netlog_key.pub")
-  }
+  # admin_ssh_key {
+  #   username   = "azureuser"
+  #   public_key = file("~/.ssh/netlog_key.pub")
+  # }
 
-  disable_password_authentication = true
+  disable_password_authentication = false
 
   custom_data = filebase64("${path.module}/cloud-init/db_init.yaml")
 
