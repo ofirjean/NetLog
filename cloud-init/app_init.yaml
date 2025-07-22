@@ -1,34 +1,74 @@
-from flask import Flask, request, jsonify
-import psycopg2
+#cloud-config
+package_update: true
+packages:
+  - python3
+  - python3-pip
 
-app = Flask(__name__)
+runcmd:
+  - pip3 install flask psycopg2-binary
+  - mkdir -p /opt/netlog
 
-# Setup your DB connection here (adjust with your DB details)
-conn = psycopg2.connect(
-    host="your-db-host",
-    database="your-db-name",
-    user="your-db-user",
-    password="your-db-password"
-)
-cur = conn.cursor()
+  - |
+    cat > /opt/netlog/app.py << 'EOF'
+    from flask import Flask, request, jsonify
+    import psycopg2, os, sys
 
-@app.route('/')
-def home():
-    return 'Hello from NetLog Flask App!'
+    app = Flask(__name__)
 
-@app.route('/log', methods=['POST'])
-def log_data():
-    data = request.get_json()
-    message = data.get('message')
+    try:
+        conn = psycopg2.connect(
+            host=os.environ.get("DB_HOST"),
+            database="netlog_db",
+            user="netlog_user",
+            password=os.environ.get("DB_PASSWORD")
+        )
+        cur = conn.cursor()
+    except Exception as e:
+        print("Failed to connect to the database:", e)
+        sys.exit(1)
 
-    if not message:
-        return jsonify({"error": "Missing message"}), 400
+    @app.route('/')
+    def home():
+        return 'NetLog App Running!'
 
-    # Insert message into your DB table (adjust table name and columns)
-    cur.execute("INSERT INTO logs (message) VALUES (%s)", (message,))
-    conn.commit()
+    @app.route('/log', methods=['POST'])
+    def log_data():
+        data = request.get_json()
+        message = data.get('message')
+        if not message:
+            return jsonify({"error": "Missing message"}), 400
+        cur.execute("INSERT INTO logs (message) VALUES (%s)", (message,))
+        conn.commit()
+        return jsonify({"status": "logged", "message": message}), 201
 
-    return jsonify({"status": "success", "message": message}), 201
+    @app.route('/logs', methods=['GET'])
+    def get_logs():
+        cur.execute("SELECT * FROM logs;")
+        rows = cur.fetchall()
+        return jsonify(rows)
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    if __name__ == '__main__':
+        app.run(host='0.0.0.0', port=5000)
+    EOF
+
+  - |
+    cat > /etc/systemd/system/flask.service <<EOF
+    [Unit]
+    Description=NetLog Flask App
+    After=network.target
+
+    [Service]
+    ExecStart=/usr/bin/python3 /opt/netlog/app.py
+    WorkingDirectory=/opt/netlog
+    Environment=DB_PASSWORD=${db_password}
+    Environment=DB_HOST=${db_host}
+    Restart=always
+    User=root
+
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+
+  - systemctl daemon-reload
+  - systemctl enable flask
+  - systemctl start flask
